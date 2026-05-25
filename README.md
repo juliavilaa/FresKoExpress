@@ -2,12 +2,12 @@
 
 Microservicio de gestión de inventario que implementa patrones de diseño como Strategy (FEFO) y Observer para optimizar la rotación de productos frescos.
 
-## 📋 Requisitos Previos
+## Requisitos Previos
 
 - Python 3.8 o superior
 - pip (gestor de paquetes de Python)
 
-## 🚀 Instalación y Configuración
+## Instalación y Configuración
 
 ### 1. Crear el Entorno Virtual
 
@@ -34,17 +34,13 @@ source .venv/bin/activate
 
 ### 3. Instalar Librerías
 
-```bash
-pip install -r requirements.txt
-```
-
-O si aún no tienes `requirements.txt`, instala las dependencias manualmente:
+Instala las dependencias:
 
 ```bash
 pip install fastapi uvicorn streamlit requests pandas
 ```
 
-## 🏃 Ejecución del Programa
+## Ejecución del Programa
 
 ### Backend (FastAPI - API REST)
 
@@ -66,7 +62,7 @@ streamlit run presentation/dashboard.py
 
 El frontend estará disponible en: `http://localhost:8501`
 
-## 📝 Resumen de Pasos (Rápido)
+## Resumen de Pasos (Rápido)
 
 ```bash
 # 1. Crear entorno virtual
@@ -98,13 +94,13 @@ FresKoExpress/
 └── README.md           # Este archivo
 ```
 
-## 🔗 Endpoints Principales
+## Endpoints Principales
 
 - `GET /` - Verifica que el servicio esté ejecutándose
 - `POST /api/inventory/batches` - Crear un nuevo lote de producto
 - `GET /api/inventory/stock` - Obtener stock disponible (aplicando estrategia FEFO)
 
-## 💡 Notas
+## Notas
 
 - El backend debe estar ejecutándose antes de usar el frontend
 - Asegúrate de tener ambas terminales abiertas con el entorno virtual activado
