@@ -31,36 +31,110 @@ if not st.session_state.logged_in:
             submit = st.form_submit_button("Login")
             
             if submit:
-                # Simulating validation against Auth Service
-                if usuario == "admin" and password == "1234":
+                # Real authentication against FastAPI Auth Service
+                auth_payload = {"username": usuario, "password": password}
+                auth_res = requests.post(f"{API_URL}/token", data=auth_payload)
+                
+                if auth_res.status_code == 200:
                     st.session_state.logged_in = True
+                    st.session_state.token = auth_res.json().get("access_token")
                     st.rerun()
                 else:
-                    st.error("Invalid credentials.")
+                    st.error("Invalid credentials. Please try again.")
 
 else:
     # --- 3. MAIN DASHBOARD ---
     
     # Logout button in the sidebar
     with st.sidebar:
-        st.markdown("### Profile")
+        st.markdown("""
+            <div style='text-align: center; padding: 10px 0; background-color: #064E3B; border-radius: 10px; margin-bottom: 20px;'>
+                <h1 style='color: #34D399; margin:0; font-size: 2.2rem; font-weight: 900;'>🛒 FresKo</h1>
+                <p style='color: #A7F3D0; margin:0; font-size: 0.9rem; letter-spacing: 2px;'>EXPRESS LOGISTICS</p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("### 👨‍💻 Profile")
         st.markdown("**User:** Administrator")
         st.markdown("**Role:** Operations")
         st.divider()
-        if st.button("Logout"):
-            st.session_state.logged_in = False
-            st.rerun()
+        st.markdown("### 🔔 Live System Events")
+        try:
+            notif_res = requests.get(f"{API_URL}/api/notifications")
+            if notif_res.status_code == 200:
+                events = notif_res.json()
+                if not events:
+                    st.info("No recent events.")
+                for ev in events:
+                    st.toast(f"{ev['event']}: {ev['details']['product']}", icon="🔔") # Toast flotante
+                    st.markdown(f"**{ev['time']}** - {ev['event']}<br><small>{ev['details']}</small>", unsafe_allow_html=True)
+                    st.divider()
+        except Exception:
+            st.error("Event bus offline.")
+    
 
     # Custom CSS for headers
+    
     st.markdown("""
         <style>
-            .main-header { font-size: 2.2rem; color: #0F172A; font-weight: 800; margin-bottom: 0rem; }
-            .section-header { color: #047857; font-weight: 600; font-size: 1.3rem; border-bottom: 2px solid #E2E8F0; padding-bottom: 0.5rem; margin-bottom: 1.5rem; margin-top: 2rem;}
+            /* Fondo sutil con puntitos tipo blueprint */
+            .stApp {
+                background-color: #F8FAFC;
+                background-image: radial-gradient(#CBD5E1 1px, transparent 1px);
+                background-size: 24px 24px;
+            }
+            
+            /* Títulos principales */
+            .main-header { 
+                font-size: 2.5rem; 
+                color: #0F172A; 
+                font-weight: 900; 
+                margin-bottom: 0rem; 
+                text-transform: uppercase;
+                letter-spacing: -1px;
+            }
+            .section-header { 
+                color: #047857; 
+                font-weight: 700; 
+                font-size: 1.4rem; 
+                border-bottom: 3px solid #10B981; 
+                padding-bottom: 0.5rem; 
+                margin-bottom: 1.5rem; 
+                margin-top: 2rem;
+            }
+            
+            /* Darle estilo oscuro a la barra lateral (Sidebar) */
+            [data-testid="stSidebar"] {
+                background-color: #0F172A;
+                border-right: 1px solid #1E293B;
+            }
+            [data-testid="stSidebar"] .css-17lntkn, [data-testid="stSidebar"] p, [data-testid="stSidebar"] div {
+                color: #F8FAFC !important;
+            }
+            
+            /* Estilizar los botones para que parezcan de una App nativa */
+            .stButton > button {
+                background-color: #10B981 !important;
+                color: white !important;
+                border-radius: 8px !important;
+                border: none !important;
+                font-weight: bold !important;
+                padding: 0.5rem 1rem !important;
+                transition: all 0.3s ease;
+            }
+            .stButton > button:hover {
+                background-color: #059669 !important;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+                transform: translateY(-2px);
+            }
+            
+            /* Mejorar el formulario de inputs */
+            .stTextInput>div>div>input, .stNumberInput>div>div>input, .stSelectbox>div>div>select {
+                border-radius: 6px;
+                border: 1px solid #CBD5E1;
+            }
         </style>
     """, unsafe_allow_html=True)
-
-    st.markdown('<div class="main-header">Operational Dashboard</div>', unsafe_allow_html=True)
-    st.markdown('<p style="color: #64748B;">Inventory Module | Auth Service & Inventory Service</p>', unsafe_allow_html=True)
 
     # 4. Fetch data from backend
     stock_data = []
@@ -113,8 +187,9 @@ else:
             
             if st.form_submit_button("Process Inbound", use_container_width=True):
                 payload = {"product_name": nombre, "category": categoria, "quantity": cantidad, "days_to_expire": dias_vencimiento}
+                headers = {"Authorization": f"Bearer {st.session_state.token}"}
                 try:
-                    res = requests.post(f"{API_URL}/api/inventory/batches", params=payload)
+                    res = requests.post(f"{API_URL}/api/inventory/batches", params=payload,headers=headers)
                     if res.status_code == 200:
                         st.success("Transaction recorded. Please refresh the view.")
                 except Exception:
